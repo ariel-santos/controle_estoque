@@ -383,13 +383,13 @@ function pedido_save($post_id){
 		return;
 	}
 	
-	$cliente_id = $_POST['cliente_id'];
+	$cliente_id = explode(" - ", $_POST['cliente']);
 	
 	$wpdb->replace(
 		"ce_pedido",
 		array(
 			"pedido_id" => $post_id,
-			"cliente_id" => $cliente_id
+			"cliente_id" => $cliente_id[0]
 		)
 	);
 }
@@ -397,17 +397,39 @@ function pedido_save($post_id){
 function pedido_html($post){
     global $wpdb;
     $post_id = get_the_ID();
-	$pedido = $wpdb->get_row("SELECT * FROM ce_pedido WHERE pedido_id = $post_id ");
+	$pedido = $wpdb->get_row("
+		SELECT cep.*, concat(wpp.ID, ' - ', wpp.post_title) as cliente_nome
+		FROM ce_pedido cep, wp_posts wpp
+		WHERE cep.pedido_id = $post_id 
+		AND wpp.ID = cep.cliente_id
+	");
+	
+	$clientes = $wpdb->get_results("
+		SELECT cec.cliente_id, wpp.post_title
+		FROM wp_posts wpp, ce_cliente cec
+		WHERE wpp.ID = cec.cliente_id
+		AND wpp.post_status = 'publish'
+	");
+	
+	foreach( $clientes as $c ){
+		$nome = $c->cliente_id . " - " .$c->post_title;
+		$dados[$nome] = null;
+	}
 ?>
     <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/materialize/css/materialize.css" />
 	<script src="<?php echo get_template_directory_uri(); ?>/materialize/js/materialize.min.js"></script>
-
+	<script>
+		jQuery(document).ready(function(data){
+			jQuery('input.autocomplete').autocomplete({
+				limit: 20,
+				data: <?php echo json_encode($dados); ?>
+			});
+		});
+	</script>
 	<div class="wrap">
 		<div class="row">
 	        <div class="input-field col s12 m6">
-	        	<select name="cliente" id="cliente">
-				 	
-				</select>
+	        	<input type="text" id="autocomplete-input" name="cliente" class="autocomplete" value="<?php echo $pedido->cliente_nome; ?>">
 				<label>Cliente</label>
 			</div>
 		</div>
