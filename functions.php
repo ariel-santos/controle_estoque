@@ -155,3 +155,263 @@ function controle_estoque_post_thumbnail_sizes_attr( $attr, $attachment, $size )
 	return $attr;
 }
 add_filter( 'wp_get_attachment_image_attributes', 'controle_estoque_post_thumbnail_sizes_attr', 10 , 3 );
+
+/*					REGISTRANDO PRODUTO  			*/
+add_action('init', 'produto_register');
+function produto_register() {
+    $labels = array(
+        'name' => _x('Produtos', 'post type general name'),
+        'singular_name' => _x('Produtos', 'post type singular name'),
+        'add_new' => _x('Adicionar Novo', 'produto  item'),
+        'add_new_item' => __('Adicionar Novo produto'),
+        'edit_item' => __('Editar produto'),
+        'new_item' => __('Nova produto'),
+        'view_item' => __('Ver produto'),
+        'search_items' => __('Procurar produto'),
+        'not_found' =>  __('Nada Encontrado'),
+        'not_found_in_trash' => __('Nada Encontrado na Lixeira'),
+        'parent_item_colon' => ''
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'query_var' => true,
+        'rewrite' => true,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_icon'   => 'dashicons-format-aside',
+        'supports' => array('title','editor')
+      ); 
+    register_post_type( 'produto' , $args );
+}
+
+add_action('add_meta_boxes', 'produto_metabox');
+
+function produto_metabox(){
+    add_meta_box(
+        'produto',
+        'Dados produto',
+        'produto_html',
+        'produto',
+        'normal',
+        'low'
+    );
+}
+
+add_action('save_post', 'produto_save');
+
+function produto_save($post_id){
+    global $wpdb;
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	
+	$preco = $_POST['preco'];
+	
+	$wpdb->replace(
+		"ce_produto",
+		array(
+			"produto_id" => $post_id,
+			"preco" => $preco
+		)
+	);
+}
+
+function produto_html($post){
+    global $wpdb;
+    $post_id = get_the_ID();
+	$produto = $wpdb->get_row("SELECT * FROM ce_produto WHERE produto_id = $post_id ");
+?>
+    <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/materialize/css/materialize.css" />
+	<script src="<?php echo get_template_directory_uri(); ?>/materialize/js/materialize.min.js"></script>
+
+	<div class="wrap">
+		<div class="row">
+			<div class="input-field col s12 m4">
+				<input type="text" name="preco" id="preco" value="<?php echo $produto->preco; ?>"/>
+				<label for="destaque">Preço do produto </label>
+	        </div>
+		</div>
+	</div>
+	
+<?php
+}
+
+/*					REGISTRANDO CLIENTE  			*/
+add_action('init', 'cliente_register');
+function cliente_register() {
+    $labels = array(
+        'name' => _x('Cliente', 'post type general name'),
+        'singular_name' => _x('Cliente', 'post type singular name'),
+        'add_new' => _x('Adicionar Novo', 'cliente  item'),
+        'add_new_item' => __('Adicionar Novo cliente'),
+        'edit_item' => __('Editar cliente'),
+        'new_item' => __('Nova cliente'),
+        'view_item' => __('Ver cliente'),
+        'search_items' => __('Procurar cliente'),
+        'not_found' =>  __('Nada Encontrado'),
+        'not_found_in_trash' => __('Nada Encontrado na Lixeira'),
+        'parent_item_colon' => ''
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'query_var' => true,
+        'rewrite' => true,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_icon'   => 'dashicons-format-aside',
+        'supports' => array('title','editor')
+      ); 
+    register_post_type( 'cliente' , $args );
+}
+
+add_action('add_meta_boxes', 'cliente_metabox');
+
+function cliente_metabox(){
+    add_meta_box(
+        'cliente',
+        'Dados cliente',
+        'cliente_html',
+        'cliente',
+        'normal',
+        'low'
+    );
+}
+
+add_action('save_post', 'cliente_save');
+
+function cliente_save($post_id){
+    global $wpdb;
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	
+	$email = $_POST['email'];
+	$telefone = $_POST['telefone'];
+
+	$wpdb->replace(
+		"ce_cliente",
+		array(
+			"cliente_id" => $post_id,
+			"email" => $email,
+			"telefone" => $telefone
+		)
+	);
+}
+
+function cliente_html($post){
+    global $wpdb;
+    $post_id = get_the_ID();
+	$cliente = $wpdb->get_row("SELECT * FROM ce_cliente WHERE cliente_id = $post_id ");
+?>
+    <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/materialize/css/materialize.css" />
+	<script src="<?php echo get_template_directory_uri(); ?>/materialize/js/materialize.min.js"></script>
+
+	<div class="wrap">
+		<div class="row">
+			<div class="input-field col s12 m6">
+				<input type="text" name="email" id="email" value="<?php echo $cliente->email; ?>"/>
+				<label for="">Email </label>
+	        </div>
+	      	<div class="input-field col s12 m6">
+				<input type="text" name="telefone" id="telefone" value="<?php echo $cliente->telefone; ?>" />
+				<label for="">Telefone </label>
+	        </div>
+		</div>
+	</div>
+	
+<?php
+}
+
+/*					REGISTRANDO PEDIDO  			*/
+add_action('init', 'pedido_register');
+function pedido_register() {
+    $labels = array(
+        'name' => _x('Pedidos', 'post type general name'),
+        'singular_name' => _x('Pedido', 'post type singular name'),
+        'add_new' => _x('Adicionar Novo', 'pedido  item'),
+        'add_new_item' => __('Adicionar Novo pedido'),
+        'edit_item' => __('Editar pedido'),
+        'new_item' => __('Nova pedido'),
+        'view_item' => __('Ver pedido'),
+        'search_items' => __('Procurar pedido'),
+        'not_found' =>  __('Nada Encontrado'),
+        'not_found_in_trash' => __('Nada Encontrado na Lixeira'),
+        'parent_item_colon' => ''
+    );
+
+    $args = array(
+        'labels' => $labels,
+        'public' => true,
+        'publicly_queryable' => true,
+        'show_ui' => true,
+        'query_var' => true,
+        'rewrite' => true,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'menu_icon'   => 'dashicons-format-aside',
+        'supports' => array('title','editor', 'thumbnail')
+      ); 
+    register_post_type( 'pedido' , $args );
+}
+
+add_action('add_meta_boxes', 'pedido_metabox');
+
+function pedido_metabox(){
+    add_meta_box(
+        'pedido',
+        'Dados pedido',
+        'pedido_html',
+        'pedido',
+        'normal',
+        'low'
+    );
+}
+
+add_action('save_post', 'pedido_save');
+
+function pedido_save($post_id){
+    global $wpdb;
+    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		return;
+	}
+	
+	$cliente_id = $_POST['cliente_id'];
+	
+	$wpdb->replace(
+		"ce_pedido",
+		array(
+			"pedido_id" => $post_id,
+			"cliente_id" => $cliente_id
+		)
+	);
+}
+
+function pedido_html($post){
+    global $wpdb;
+    $post_id = get_the_ID();
+	$pedido = $wpdb->get_row("SELECT * FROM ce_pedido WHERE pedido_id = $post_id ");
+?>
+    <link type="text/css" rel="stylesheet" href="<?php echo get_template_directory_uri(); ?>/materialize/css/materialize.css" />
+	<script src="<?php echo get_template_directory_uri(); ?>/materialize/js/materialize.min.js"></script>
+
+	<div class="wrap">
+		<div class="row">
+	        <div class="input-field col s12 m6">
+	        	<select name="cliente" id="cliente">
+				 	
+				</select>
+				<label>Cliente</label>
+			</div>
+		</div>
+	</div>
+	
+<?php
+}
